@@ -6,4 +6,4 @@ CodePipeline、CodeBuildにてCICDを構築しています。
 
 ## アーキテクチャ図
 
-![](./img/cdn-002.drawio.svg)
+![](./img/cicd-001.drawio.svg)
