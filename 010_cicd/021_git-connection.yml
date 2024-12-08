@@ -1,0 +1,28 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Parameters:
+  CustomParameter001:
+    Type: "String"
+    Default: "custom001"
+  GitHubOrganizationName:
+    Type: "String"
+
+Resources:
+  # ------------------------------------------------------------#
+  # CodeStarConnections::Connection
+  # ------------------------------------------------------------#
+  ConnectionGitHub:
+    Type: "AWS::CodeStarConnections::Connection"
+    Properties:
+      ConnectionName: !Sub "git-${GitHubOrganizationName}-${CustomParameter001}"
+      ProviderType: "GitHub"
+
+Outputs:
+  ConnectionGitHub:
+    Value: !Ref ConnectionGitHub
+    Export:
+      Name: !Sub "git-${GitHubOrganizationName}-${CustomParameter001}"
+  ConnectionGitHubArn:
+    Value: !GetAtt ConnectionGitHub.ConnectionArn
+    Export:
+      Name: !Sub "git-${GitHubOrganizationName}-${CustomParameter001}-arn"
