@@ -53,16 +53,10 @@ Resources:
         Statement:
           - Effect: "Allow"
             Action:
-              - "s3:*"
+              - "s3:GetObject"
             Resource: 
-              - !Sub "arn:aws:s3:::s3-codepipeline-${CustomParameter001}"
-              - !Sub "arn:aws:s3:::s3-codepipeline-${CustomParameter001}/*"
-              - !Sub "arn:aws:s3:::s3-${CustomParameter001}/*"
-              - !Sub "arn:aws:s3:::s3-${CustomParameter001}"
-          - Effect: "Allow"
-            Action:
-              - "cloudfront:CreateInvalidation"
-            Resource: "*"
+              - !Sub "arn:aws:s3:::s3-${CustomParameter001}-codepipeline"
+              - !Sub "arn:aws:s3:::s3-${CustomParameter001}-codepipeline/*"
 
   #-------------------------
   # CodeBuild::Project
@@ -81,11 +75,11 @@ Resources:
             install:
               commands:
                 - echo installs phase
-                - npm --version
+                - npm install -g cowsay
             build:
               commands:
                 - echo build phase
-                - npm --version
+                - cowsay $CowsayLine
         InsecureSsl: false
         Type: "CODEPIPELINE"
       Artifacts: 
@@ -101,6 +95,10 @@ Resources:
         ImagePullCredentialsType: "CODEBUILD"
         PrivilegedMode: false
         Type: "LINUX_CONTAINER"
+        EnvironmentVariables:
+          - Name: "CowsayLine"
+            Type: "PLAINTEXT"
+            Value: "Hello world!"
       ServiceRole: !Ref IAMRoleCodebuild
       TimeoutInMinutes: 60
       QueuedTimeoutInMinutes: 480
