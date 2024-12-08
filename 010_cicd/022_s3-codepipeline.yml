@@ -1,10 +1,10 @@
 AWSTemplateFormatVersion: "2010-09-09"
+Description: "S# for CodePipeline"
 
 Parameters:
   CustomParameter001:
     Type: "String"
-    Description: "This is custom-parameter."
-    Default: "hogehogehooge"
+    Default: "custom001"
 
 Resources:
   # ------------------------------------------------------------#
@@ -13,7 +13,7 @@ Resources:
   S3BucketPipeline:
     Type: "AWS::S3::Bucket"
     Properties:
-      BucketName: !Sub "s3-codepipeline-${CustomParameter001}"
+      BucketName: !Sub "s3-${CustomParameter001}-codepipeline"
       PublicAccessBlockConfiguration:
         BlockPublicAcls: True
         BlockPublicPolicy: True
@@ -23,11 +23,9 @@ Resources:
 Outputs:
   S3BucketPipeline:
     Value: !Ref S3BucketPipeline
-    Description: "This s3 bucket for codepipeline."
     Export:
-      Name: !Sub "s3-codepipeline-${CustomParameter001}"
+      Name: !Sub "s3-${CustomParameter001}-codepipeline"
   S3BucketPipelineArn:
     Value: !GetAtt S3BucketPipeline.Arn
-    Description: "This s3 bucket Arn for codepipeline."
     Export:
-      Name: !Sub "s3-codepipeline-${CustomParameter001}-arn"
+      Name: !Sub "s3-${CustomParameter001}-codepipeline-arn"
