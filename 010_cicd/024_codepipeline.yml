@@ -1,17 +1,16 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: ""
+Description: "CodePipeline with IAM"
 
 Parameters:
   CustomParameter001:
     Type: "String"
-    Description: "This is custom-parameter."
-    Default: "hogehogehooge"
-  ConnectionArn:
+    Default: "custom001"
+  GitHubOrganizationName:
     Type: "String"
-    Description: "ConnectionArn"
-  FullRepositoryId:
+  RepositoryName:
     Type: "String"
-    Description: "FullRepositoryId"
+  BranchName:
+    Type: "String"
 
 Resources:
   #-------------------------
@@ -40,7 +39,7 @@ Resources:
     Type: "AWS::IAM::Policy"
     DependsOn: IAMRoleCodepipeline
     Properties:
-      PolicyName: !Sub "policy-codepipeline-${CustomParameter001}"
+      PolicyName: !Sub "policy-s3-access"
       Roles:
         - !Ref IAMRoleCodepipeline
       PolicyDocument:
@@ -48,10 +47,10 @@ Resources:
         Statement:
           - Effect: "Allow"
             Action:
-              - "s3:*"
+              - "s3:PutObject"
             Resource:
-              - !Sub "arn:aws:s3:::s3-codepipeline-${CustomParameter001}"
-              - !Sub "arn:aws:s3:::s3-codepipeline-${CustomParameter001}/*"
+              - !Sub "arn:aws:s3:::s3-${CustomParameter001}-codepipeline"
+              - !Sub "arn:aws:s3:::s3-${CustomParameter001}-codepipeline/*"
           - Effect: "Allow"
             Action:
               - "codestar-connections:UseConnection"
@@ -75,7 +74,7 @@ Resources:
       Name: !Sub "codepipeline-${CustomParameter001}"
       RoleArn: !GetAtt IAMRoleCodepipeline.Arn
       ArtifactStore: 
-        Location: { Fn::ImportValue: !Sub "s3-codepipeline-${CustomParameter001}" }
+        Location: { Fn::ImportValue: !Sub "s3-${CustomParameter001}-codepipeline" }
         Type: "S3"
       Stages: 
         - Name: "Source"
@@ -87,9 +86,9 @@ Resources:
                 Provider: "CodeStarSourceConnection"
                 Version: "1"
               Configuration: 
-                BranchName: "main"
-                ConnectionArn: !Ref ConnectionArn
-                FullRepositoryId: !Ref FullRepositoryId
+                BranchName: !Ref BranchName
+                ConnectionArn: { Fn::ImportValue: !Sub "git-${GitHubOrganizationName}-${CustomParameter001}-arn" }
+                FullRepositoryId: !Sub "${GitHubOrganizationName}/${RepositoryName}"
                 OutputArtifactFormat: "CODE_ZIP"
               OutputArtifacts: 
                 - Name: "SourceArtifact"

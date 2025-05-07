@@ -1,13 +1,7 @@
-# aws-cloudformation-cdn-002
-
-## 概要
-
-これはAWSを利用したCDN構成のAWS CloudFormationテンプレートです。
+# aws-cloudformation-cicd-001
 
 CodePipeline、CodeBuildにてCICDを構築しています。
 
 ## アーキテクチャ図
 
-本構成のアーキテクチャ図を下記に記します。
-
-![](./img/cdn-002.drawio.svg)
+![](./img/cicd-001.drawio.svg)

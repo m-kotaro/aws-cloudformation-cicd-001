@@ -4,14 +4,13 @@ Description: "CodeBuild with IAM"
 Parameters:
   CustomParameter001:
     Type: "String"
-    Description: "This is custom-parameter."
-    Default: "hogehogehooge"
+    Default: "custom001"
 
 Resources:
   #-------------------------
-  # AWS::Logs::LogGroup
+  # Logs::LogGroup
   #-------------------------
-  MyLogGroup:
+  LogGroupCodebuild:
     Type: "AWS::Logs::LogGroup"
     Properties:
       LogGroupName: !Sub "/aws/codebuild/codebuild-${CustomParameter001}"
@@ -24,7 +23,7 @@ Resources:
     Type: "AWS::IAM::Role"
     Properties:
       Path: "/"
-      RoleName: !Sub "role-codebuild-${CustomParameter001}"
+      RoleName: !Sub "role-${CustomParameter001}-codebuild"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -34,9 +33,9 @@ Resources:
             Action: "sts:AssumeRole"
       MaxSessionDuration: 3600
       ManagedPolicyArns:
-      - "arn:aws:iam::aws:policy/CloudWatchEventsFullAccess"
-      - "arn:aws:iam::aws:policy/CloudWatchFullAccess"
-      - "arn:aws:iam::aws:policy/CloudWatchFullAccessV2"
+        - "arn:aws:iam::aws:policy/CloudWatchEventsFullAccess"
+        - "arn:aws:iam::aws:policy/CloudWatchFullAccess"
+        - "arn:aws:iam::aws:policy/CloudWatchFullAccessV2"
 
   #-------------------------
   # IAM::Policy
@@ -46,7 +45,7 @@ Resources:
     DependsOn:
      - IAMRoleCodebuild
     Properties:
-      PolicyName: "inlinepolicy"
+      PolicyName: "policy-s3-access"
       Roles:
         - Ref: IAMRoleCodebuild
       PolicyDocument:
@@ -54,16 +53,10 @@ Resources:
         Statement:
           - Effect: "Allow"
             Action:
-              - "s3:*"
+              - "s3:GetObject"
             Resource: 
-              - !Sub "arn:aws:s3:::s3-codepipeline-${CustomParameter001}"
-              - !Sub "arn:aws:s3:::s3-codepipeline-${CustomParameter001}/*"
-              - !Sub "arn:aws:s3:::s3-${CustomParameter001}/*"
-              - !Sub "arn:aws:s3:::s3-${CustomParameter001}"
-          - Effect: "Allow"
-            Action:
-              - "cloudfront:CreateInvalidation"
-            Resource: "*"
+              - !Sub "arn:aws:s3:::s3-${CustomParameter001}-codepipeline"
+              - !Sub "arn:aws:s3:::s3-${CustomParameter001}-codepipeline/*"
 
   #-------------------------
   # CodeBuild::Project
@@ -79,15 +72,14 @@ Resources:
         BuildSpec: |
           version: 0.2
           phases:
+            install:
+              commands:
+                - echo installs phase
+                - npm install -g cowsay
             build:
               commands:
                 - echo build phase
-                - ls -l
-                - pwd
-                - npm install
-                - npm run docs:build
-                - aws s3 sync ./dist s3://$S3BUCKET_CONTENTS/ --delete
-                - aws cloudfront create-invalidation --distribution-id $CloudFrontDistributionID  --paths "/*"
+                - cowsay $CowsayLine
         InsecureSsl: false
         Type: "CODEPIPELINE"
       Artifacts: 
@@ -104,12 +96,9 @@ Resources:
         PrivilegedMode: false
         Type: "LINUX_CONTAINER"
         EnvironmentVariables:
-          - Name: "CloudFrontDistributionID"
+          - Name: "CowsayLine"
             Type: "PLAINTEXT"
-            Value: { Fn::ImportValue: !Sub "cloudfront-${CustomParameter001}" }
-          - Name: "S3BUCKET_CONTENTS"
-            Type: "PLAINTEXT"
-            Value: { Fn::ImportValue: !Sub "s3-${CustomParameter001}" }
+            Value: "Hello world!"
       ServiceRole: !Ref IAMRoleCodebuild
       TimeoutInMinutes: 60
       QueuedTimeoutInMinutes: 480
@@ -123,11 +112,9 @@ Resources:
 Outputs:
   CodeBuildProject:
     Value: !Ref CodeBuildProject
-    Description: "CodeBuild"
     Export:
       Name: !Sub "codebuild-${CustomParameter001}"
   CodeBuildProjectArn:
     Value: !GetAtt CodeBuildProject.Arn
-    Description: "CodeBuildProjectArn"
     Export:
       Name: !Sub "codebuild-${CustomParameter001}-arn"
